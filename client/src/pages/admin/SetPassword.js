@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 
 const apiUrl = process.env.REACT_APP_BACKEND_URL;
 
 const SetPassword = () => {
     const [users, setUsers] = useState([]);
     const [passwords, setPasswords] = useState({}); // Object to keep track of passwords for each user
+    const [showPasswords, setShowPasswords] = useState({}); // Object to toggle password visibility
 
     useEffect(() => {
         fetchUsers();
@@ -16,6 +18,12 @@ const SetPassword = () => {
         try {
             const response = await axios.get(`${apiUrl}/api/users`);
             setUsers(response.data);
+            // Initialize passwords with existing values
+            const initialPasswords = {};
+            response.data.forEach(user => {
+                initialPasswords[user._id] = user.password || ''; // Use existing password or empty string
+            });
+            setPasswords(initialPasswords);
         } catch (error) {
             toast.error('Failed to fetch users');
         }
@@ -30,8 +38,7 @@ const SetPassword = () => {
 
     const handlePasswordUpdate = async (id, newPassword) => {
         try {
-            await axios.post(`${apiUrl}/api/users`, {
-                userId: id,
+            await axios.put(`${apiUrl}/api/users/${id}`, {
                 password: newPassword,
             });
             toast.success('Password updated successfully');
@@ -40,10 +47,17 @@ const SetPassword = () => {
         }
     };
 
-    const handleKeyPress = (e, id, newPassword) => {
+    const handleKeyPress = (e, id) => {
         if (e.key === 'Enter') {
-            handlePasswordUpdate(id, newPassword);
+            handlePasswordUpdate(id, passwords[id]);
         }
+    };
+
+    const toggleShowPassword = (id) => {
+        setShowPasswords((prevShowPasswords) => ({
+            ...prevShowPasswords,
+            [id]: !prevShowPasswords[id],
+        }));
     };
 
     return (
@@ -61,15 +75,21 @@ const SetPassword = () => {
                         {users.map((user) => (
                             <tr key={user._id}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-6 py-4 whitespace-nowrap relative">
                                     <input
-                                        type="password"
+                                        type={showPasswords[user._id] ? 'text' : 'password'}
                                         value={passwords[user._id] || ''}
                                         onChange={(e) => handlePasswordChange(user._id, e.target.value)}
-                                        onKeyDown={(e) => handleKeyPress(e, user._id, passwords[user._id])}
+                                        onKeyDown={(e) => handleKeyPress(e, user._id)}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-500"
                                         placeholder="Enter new password"
                                     />
+                                    <span
+                                        onClick={() => toggleShowPassword(user._id)}
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                                    >
+                                        {showPasswords[user._id] ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                                    </span>
                                 </td>
                             </tr>
                         ))}

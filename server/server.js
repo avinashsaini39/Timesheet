@@ -17,6 +17,20 @@ app.use(cors()); // Add this line to enable CORS for all routes
 // Routes
 app.use('/api', userRoutes);
 app.use('/api/admin', adminRoutes);
+// Express route for updating user password
+// app.put('/api/users/:id', async (req, res) => {
+//     const { id } = req.params;
+//     const { password } = req.body;
+
+//     try {
+//         const hashedPassword = await bcrypt.hash(password, 12);
+//         await User.findByIdAndUpdate(id, { password: hashedPassword });
+//         res.status(200).json({ message: 'Password updated successfully' });
+//     } catch (error) {
+//         res.status(500).json({ message: 'Failed to update password' });
+//     }
+// });
+
 
 // Connect to MongoDB
 mongoose.connect('mongodb+srv://avinashsaini39:9928373382@cluster.ysujsgk.mongodb.net/timesheet')
